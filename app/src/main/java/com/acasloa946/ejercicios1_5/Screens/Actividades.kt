@@ -1,5 +1,6 @@
 package com.dam23_24.composecatalogolayout.screens
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,10 +23,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToLong
 
 /*
 Actividad 1:
@@ -211,14 +215,43 @@ al que debes añadir un padding alrededor de 15 dp y establecer colores diferent
 cuando tenga el foco y no lo tenga.
 A nivel funcional no permitas que se introduzcan caracteres que invaliden un número decimal.
 */
-fun fn(string: String):String {
+var puntoAnadido = false
 
-    var filtrador = string.filter{it.isDigit() || it==','||it=='.' }
-   
+/**
+ * Función elevada que controla el comportamiento del OutlinedTextField
+ * @param: string -> it del onValueChange (string que se esta escribiendo)
+ * @return filtrador -> string que es la que se esta imprimiendo en el value del OutlinedTextField
+ */
+fun funcionElevada(string: String):String {
+    //filtro el string para que solo se puedan escribir dígitos, comas y puntos.
+    var filtrador = string.filter { it.isDigit() || it == ',' || it == '.' }
+    //si la string no está vacía
+    if (filtrador.isNotBlank()) {
+        //si el ultimo dígito es una coma y no se ha añadido un punto anteriormente.
+        if (filtrador.last() == ',' && !puntoAnadido) {
+            filtrador = filtrador.replace(',', '.')
+            puntoAnadido = true
+        }
+        //si el último dígito es una coma o un punto y el punto ya ha sido añadido
+        else if((filtrador.last()=='.' || filtrador.last()==',') && puntoAnadido) {
+            filtrador = filtrador.dropLast(1)
+        }
+        //si no contiene ningun punto significa que el punto no ha sido añadido
+        if (filtrador.contains('.')==false) {
+            puntoAnadido=false
+        }
+    }
+    //si la string esta vacía el punto no puede estar añadido.
+    else {
+        puntoAnadido = false
+    }
 
      return filtrador
 }
 
+/**
+ * Función de la actividad 5
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Actividad5() {
@@ -230,9 +263,10 @@ fun Actividad5() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedTextField(
-            modifier = Modifier.padding(15.dp),
+            modifier = Modifier
+                .padding(15.dp),
             onValueChange = { myVal = it 
-                            final = fn(myVal)},
+                            final = funcionElevada(myVal)},
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = Color.Blue,
                 unfocusedBorderColor = Color.Gray
@@ -241,7 +275,7 @@ fun Actividad5() {
             label = { Text(text = "Importe") }
         )
         Button(
-            onClick = { /*TODO*/ }) {
+            onClick = {  }) {
             Text(text = "Quitar foco")
         }
     }
